@@ -1,8 +1,6 @@
 # 🪐 LinkSync
 
-A private, real-time link sharing app with a space theme. Add links on one device and they instantly appear on all others in the same room — no account, no install, just open the file in a browser.
-
-![Space themed interface with floating planet links on a starfield background]
+A private, real-time link sharing app with a space theme. Add links on one device and they instantly appear on all others in the same room — no account, no install, just open in a browser.
 
 ---
 
@@ -26,17 +24,6 @@ A private, real-time link sharing app with a space theme. Add links on one devic
 | **Join** | Enter the code on any device to sync instantly |
 | **Privacy** | Rooms are private by code only — no list of rooms is ever exposed |
 | **History** | Your recently joined rooms are saved in the browser for quick access |
-
----
-
-## Tech stack
-
-| | |
-|---|---|
-| **Frontend** | Vanilla HTML, CSS, JavaScript — no frameworks |
-| **Backend** | Firebase Realtime Database (free tier) |
-| **Fonts** | Orbitron, Share Tech Mono, Exo 2 via Google Fonts |
-| **Hosting** | Any static host — GitHub Pages, Netlify, Vercel, or just a local file |
 
 ---
 

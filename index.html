@@ -412,10 +412,11 @@ function initPlanet(link){
   const size=36+(link.domain.length%3)*10;
   const margin=size+4;
   planetStates[link.fbKey]={
+    fbKey:link.fbKey,
     x:margin+Math.random()*(W-margin*2),
     y:margin+Math.random()*(H-margin*2),
     vx:(Math.random()-.5)*.55,vy:(Math.random()-.5)*.55,
-    size,el:null,tipEl:null,
+    size,el:null,tipEl:null,closeTimer:null,
   };
 }
 function syncPlanets(){
@@ -484,6 +485,7 @@ function createPlanetEl(link){
   tip.querySelector('.del-btn').addEventListener('click',()=>removeLink(link.fbKey));
 
   planet.addEventListener('mouseenter',()=>{
+    // close any other open tip
     if(hoveredKey&&hoveredKey!==link.fbKey){
       const o=planetStates[hoveredKey];
       if(o&&o.tipEl)o.tipEl.classList.remove('visible');
@@ -491,16 +493,7 @@ function createPlanetEl(link){
     hoveredKey=link.fbKey;
     positionTip(st,field);
     tip.classList.add('visible');
-  });
-  planet.addEventListener('mouseleave',e=>{
-    if(e.relatedTarget&&tip.contains(e.relatedTarget))return;
-    tip.classList.remove('visible');
-    hoveredKey=null;
-  });
-  tip.addEventListener('mouseleave',e=>{
-    if(e.relatedTarget&&planet.contains(e.relatedTarget))return;
-    tip.classList.remove('visible');
-    hoveredKey=null;
+    clearTimeout(st.closeTimer);
   });
 }
 
@@ -533,6 +526,39 @@ function startAnim(){
   }
   requestAnimationFrame(tick);
 }
+
+// ── Grace-zone hover tracker ──────────────────────────────────────────
+// Keeps tooltip open while mouse is within GRACE px of planet or tooltip
+const GRACE = 60;
+let mouseX = 0, mouseY = 0;
+document.addEventListener('mousemove', e => {
+  mouseX = e.clientX; mouseY = e.clientY;
+  if(!hoveredKey) return;
+  const st = planetStates[hoveredKey];
+  if(!st || !st.el || !st.tipEl) return;
+  const field = getField();
+  if(!field) return;
+  const fr = field.getBoundingClientRect();
+  // planet centre in viewport coords
+  const pcx = fr.left + st.x + st.size / 2;
+  const pcy = fr.top  + st.y + st.size / 2;
+  const distPlanet = Math.hypot(mouseX - pcx, mouseY - pcy);
+  // tip bounding box with grace padding
+  const tr = st.tipEl.getBoundingClientRect();
+  const inTip = mouseX >= tr.left - GRACE && mouseX <= tr.right  + GRACE
+             && mouseY >= tr.top  - GRACE && mouseY <= tr.bottom + GRACE;
+  const inZone = distPlanet < (st.size / 2 + GRACE) || inTip;
+  if(inZone) {
+    clearTimeout(st.closeTimer);
+    st.closeTimer = null;
+  } else if(!st.closeTimer) {
+    st.closeTimer = setTimeout(() => {
+      st.tipEl.classList.remove('visible');
+      if(hoveredKey) hoveredKey = null;
+      st.closeTimer = null;
+    }, 300);
+  }
+}, { passive: true });
 
 // ── SVG icons ─────────────────────────────────────────────────────────
 const SVG={

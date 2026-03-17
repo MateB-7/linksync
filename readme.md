@@ -2,7 +2,7 @@
 
 A private, real-time link sharing app with a space theme. Add links on one device and they instantly appear on all others in the same room — no account, no install, just open in a browser.
 
-![LinkSync screenshot](assets/unnamed.png)
+![LinkSync screenshot](assets/unnamed.jpg)
 
 ## Features
 

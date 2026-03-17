@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LinkSync</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#04010f;--panel:rgba(12,6,35,0.82);--border:rgba(160,100,255,0.25);--border2:rgba(160,100,255,0.1);
+  --text:#e8e0ff;--muted:#7a6aaa;--accent:#b57bff;--accent2:#7c4dff;--glow:rgba(181,123,255,0.18);
+  --danger:#ff5272;--green:#7affb8;--input-bg:rgba(8,3,25,0.9);
+}
+html,body{min-height:100vh;background:var(--bg);color:var(--text);font-family:'Exo 2',sans-serif;overflow-x:hidden}
+#c{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.neb{position:fixed;inset:0;pointer-events:none;z-index:0;background:
+  radial-gradient(ellipse 70% 50% at 15% 25%,rgba(80,20,160,0.35) 0%,transparent 60%),
+  radial-gradient(ellipse 50% 60% at 85% 75%,rgba(50,10,120,0.3) 0%,transparent 55%),
+  radial-gradient(ellipse 40% 30% at 55% 10%,rgba(100,40,180,0.2) 0%,transparent 50%),
+  radial-gradient(ellipse 60% 40% at 30% 80%,rgba(30,5,80,0.4) 0%,transparent 55%)}
+.app{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0 1rem 4rem}
+
+/* ── Header ── */
+.hdr{width:100%;max-width:700px;padding:2rem 0 1.5rem;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-orb{width:40px;height:40px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#c084fc,#4c1d95);box-shadow:0 0 25px rgba(160,100,255,0.5),0 0 50px rgba(124,77,255,0.2);flex-shrink:0;animation:orb-pulse 4s ease-in-out infinite}
+@keyframes orb-pulse{0%,100%{box-shadow:0 0 25px rgba(160,100,255,0.5),0 0 50px rgba(124,77,255,0.2)}50%{box-shadow:0 0 40px rgba(160,100,255,0.7),0 0 70px rgba(124,77,255,0.35)}}
+.logo-name{font-family:'Orbitron',monospace;font-size:18px;font-weight:700;letter-spacing:.15em;color:var(--text);text-shadow:0 0 25px rgba(160,100,255,0.6)}
+
+/* Room header bar */
+.room-bar{display:flex;align-items:center;gap:10px}
+.room-name-display{font-family:'Exo 2',sans-serif;font-size:15px;font-weight:500;color:var(--text);cursor:pointer;padding:4px 8px;border-radius:7px;transition:background .15s;border:1px solid transparent}
+.room-name-display:hover{background:rgba(160,100,255,0.12);border-color:var(--border2)}
+.room-name-input{font-family:'Exo 2',sans-serif;font-size:15px;font-weight:500;color:var(--text);background:var(--input-bg);border:1px solid var(--accent);border-radius:7px;padding:4px 8px;outline:none;width:140px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 2.2s ease-in-out infinite;flex-shrink:0}
+.dot.off{background:var(--danger);box-shadow:0 0 8px var(--danger);animation:none}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* Code icon button */
+.code-icon-btn{width:36px;height:36px;border-radius:10px;background:var(--panel);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;backdrop-filter:blur(12px);position:relative;flex-shrink:0}
+.code-icon-btn:hover{border-color:var(--accent);box-shadow:0 0 18px var(--glow)}
+.code-icon-btn svg{color:var(--accent)}
+/* Code popover */
+.code-popover{position:absolute;top:calc(100% + 8px);right:0;background:rgba(10,4,28,0.97);border:1px solid var(--border);border-radius:12px;padding:14px 16px;min-width:200px;backdrop-filter:blur(16px);box-shadow:0 4px 30px rgba(0,0,0,0.5),0 0 20px rgba(124,77,255,0.15);z-index:200;display:none}
+.code-popover.open{display:block}
+.code-popover-label{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;margin-bottom:8px}
+.code-popover-val{font-family:'Orbitron',monospace;font-size:22px;font-weight:700;letter-spacing:.3em;color:var(--text);text-shadow:0 0 20px rgba(181,123,255,0.5);cursor:pointer;padding-right:.3em;transition:text-shadow .15s}
+.code-popover-val:hover{text-shadow:0 0 35px rgba(181,123,255,0.9)}
+.code-popover-hint{font-size:11px;color:var(--muted);margin-top:5px}
+.code-popover-hint span{color:var(--accent);cursor:pointer;text-decoration:underline}
+
+.btn-icon{width:36px;height:36px;border-radius:10px;background:transparent;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;color:var(--muted);flex-shrink:0}
+.btn-icon:hover{border-color:var(--accent);color:var(--accent);background:rgba(124,77,255,0.14)}
+
+/* ── Panel ── */
+.panel{width:100%;max-width:700px;background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:1.5rem;margin-bottom:1.25rem;backdrop-filter:blur(24px);position:relative;overflow:hidden}
+.panel::before{content:'';position:absolute;top:0;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,rgba(181,123,255,0.5),transparent)}
+.lbl{font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;margin-bottom:.9rem}
+
+/* ── Inputs ── */
+.add-row{display:flex;gap:10px}
+.inp{flex:1;background:var(--input-bg);border:1px solid var(--border);border-radius:10px;padding:11px 14px;font-size:14px;color:var(--text);font-family:'Exo 2',sans-serif;outline:none;transition:all .2s}
+.inp:focus{border-color:var(--accent);box-shadow:0 0 20px var(--glow)}
+.inp::placeholder{color:var(--muted)}
+.inp-code{font-family:'Orbitron',monospace;font-size:18px;font-weight:600;letter-spacing:.25em;text-align:center;text-transform:uppercase}
+.btn{background:linear-gradient(135deg,rgba(160,100,255,0.25),rgba(124,77,255,0.2));border:1px solid var(--accent);border-radius:10px;padding:11px 22px;color:var(--accent);font-family:'Orbitron',monospace;font-size:11px;font-weight:600;letter-spacing:.1em;cursor:pointer;transition:all .2s;white-space:nowrap}
+.btn:hover{background:linear-gradient(135deg,rgba(160,100,255,0.4),rgba(124,77,255,0.35));box-shadow:0 0 22px var(--glow);transform:translateY(-1px)}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.35;cursor:not-allowed;transform:none}
+.btn-full{width:100%;padding:13px;font-size:12px}
+.btn-ghost{background:transparent;border-color:var(--border);color:var(--muted);font-family:'Exo 2',sans-serif;font-size:13px;font-weight:500;letter-spacing:normal}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent);background:rgba(124,77,255,0.14);box-shadow:none;transform:none}
+.or-row{display:flex;align-items:center;gap:12px;margin:1rem 0}
+.or-line{flex:1;height:1px;background:var(--border2)}
+.or-txt{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:.15em}
+
+/* ── Color picker ── */
+.color-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:.75rem}
+.color-swatch{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .15s,border-color .15s;flex-shrink:0}
+.color-swatch:hover{transform:scale(1.2)}
+.color-swatch.selected{border-color:white;transform:scale(1.15)}
+
+/* ── Recent rooms — big cards at bottom ── */
+.recent-section{width:100%;max-width:700px;margin-top:.5rem}
+.recent-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.recent-card{background:var(--panel);border:1px solid var(--border2);border-radius:16px;padding:1.25rem;cursor:pointer;transition:all .25s;position:relative;overflow:hidden;backdrop-filter:blur(16px)}
+.recent-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(181,123,255,0.3),transparent)}
+.recent-card:hover{border-color:var(--accent);box-shadow:0 0 25px var(--glow);transform:translateY(-3px)}
+.recent-card-planet{width:52px;height:52px;border-radius:50%;margin-bottom:.9rem;box-shadow:0 0 20px var(--planet-glow,rgba(160,100,255,0.4))}
+.recent-card-name{font-size:14px;font-weight:500;color:var(--text);margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.recent-card-code{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:.1em}
+.recent-card-time{font-size:11px;color:var(--muted);opacity:.6;margin-top:4px}
+.recent-card-del{position:absolute;top:10px;right:10px;width:24px;height:24px;border-radius:6px;border:none;background:transparent;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s,color .15s}
+.recent-card:hover .recent-card-del{opacity:1}
+.recent-card-del:hover{color:var(--danger)}
+/* Edit overlay on card */
+.recent-card-edit{position:absolute;top:10px;right:36px;width:24px;height:24px;border-radius:6px;border:none;background:transparent;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s,color .15s}
+.recent-card:hover .recent-card-edit{opacity:1}
+.recent-card-edit:hover{color:var(--accent)}
+
+/* ── Edit modal ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(2,1,15,0.75);z-index:300;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal{background:rgba(14,6,40,0.98);border:1px solid var(--border);border-radius:20px;padding:1.75rem;width:90%;max-width:360px;box-shadow:0 8px 60px rgba(0,0,0,0.6),0 0 40px rgba(124,77,255,0.2)}
+.modal-title{font-family:'Orbitron',monospace;font-size:13px;font-weight:600;letter-spacing:.12em;color:var(--text);margin-bottom:1.25rem}
+.modal-label{font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;margin-bottom:.5rem;margin-top:1rem}
+.modal-input{width:100%;background:var(--input-bg);border:1px solid var(--border);border-radius:10px;padding:10px 13px;font-size:14px;color:var(--text);font-family:'Exo 2',sans-serif;outline:none;transition:border-color .2s}
+.modal-input:focus{border-color:var(--accent)}
+.modal-actions{display:flex;gap:8px;margin-top:1.5rem}
+.modal-save{flex:1;background:linear-gradient(135deg,rgba(160,100,255,0.3),rgba(124,77,255,0.25));border:1px solid var(--accent);border-radius:10px;padding:10px;color:var(--accent);font-family:'Orbitron',monospace;font-size:11px;font-weight:600;letter-spacing:.1em;cursor:pointer;transition:all .2s}
+.modal-save:hover{background:linear-gradient(135deg,rgba(160,100,255,0.45),rgba(124,77,255,0.4));box-shadow:0 0 18px var(--glow)}
+.modal-cancel{padding:10px 16px;background:transparent;border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Exo 2',sans-serif;font-size:13px;cursor:pointer;transition:all .2s}
+.modal-cancel:hover{border-color:var(--border);color:var(--text)}
+
+/* ── Orbit field ── */
+#orbit-field{width:100%;max-width:700px;height:460px;position:relative;margin-bottom:1rem}
+#tip-layer{position:absolute;inset:0;pointer-events:none;z-index:50}
+
+/* ── Planet ── */
+.planet{position:absolute;border-radius:50%;cursor:pointer;will-change:transform;left:0;top:0;pointer-events:auto}
+.planet-inner{border-radius:50%;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;transition:transform .2s,filter .2s}
+.planet:hover .planet-inner{transform:scale(1.1);filter:brightness(1.25)}
+.planet-surface{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 30% 25%,rgba(255,255,255,0.22) 0%,transparent 55%);pointer-events:none}
+.planet-favicon{position:absolute;border-radius:3px;pointer-events:none}
+.planet-tip{position:absolute;background:rgba(10,4,28,0.97);border:1px solid var(--border);border-radius:12px;padding:10px 12px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s;backdrop-filter:blur(16px);min-width:190px;box-shadow:0 4px 30px rgba(0,0,0,0.5),0 0 20px rgba(124,77,255,0.15)}
+.planet-tip.visible{pointer-events:auto;opacity:1}
+.tip-domain{font-size:13px;font-weight:500;color:var(--text);overflow:hidden;text-overflow:ellipsis;max-width:210px}
+.tip-url{font-size:10px;color:var(--muted);font-family:'Share Tech Mono',monospace;margin-top:3px;overflow:hidden;text-overflow:ellipsis;max-width:210px}
+.tip-time{font-size:10px;color:rgba(122,106,170,.55);margin-top:2px}
+.tip-actions{display:flex;gap:6px;margin-top:9px}
+.tip-btn{background:rgba(160,100,255,0.15);border:1px solid var(--border);border-radius:7px;padding:5px 11px;font-size:11px;color:var(--accent);cursor:pointer;transition:all .15s;font-family:'Exo 2',sans-serif;display:flex;align-items:center;gap:4px;text-decoration:none}
+.tip-btn:hover{background:rgba(160,100,255,0.3);border-color:var(--accent)}
+.tip-btn.del{color:var(--danger);border-color:rgba(255,82,114,.2);background:rgba(255,82,114,.08)}
+.tip-btn.del:hover{background:rgba(255,82,114,.22)}
+
+.empty-field{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--muted);text-align:center;gap:1rem}
+.empty-orb{width:55px;height:55px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#4c1d95,#0d0520);border:1px solid var(--border2);animation:drift-orb 5s ease-in-out infinite}
+@keyframes drift-orb{0%,100%{transform:translate(0,0)}33%{transform:translate(6px,-8px)}66%{transform:translate(-4px,5px)}}
+.empty-field p{font-size:13px}
+.empty-field small{font-size:11px;opacity:.5}
+
+.err{background:rgba(255,82,114,.08);border:1px solid rgba(255,82,114,.3);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--danger);margin-bottom:1rem;max-width:700px;width:100%}
+.ft{font-family:'Share Tech Mono',monospace;font-size:10px;color:rgba(122,106,170,.35);letter-spacing:.1em;text-align:center;max-width:700px;width:100%}
+#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(10px);background:rgba(12,6,35,0.95);border:1px solid var(--accent);border-radius:10px;padding:8px 20px;font-size:12px;font-family:'Share Tech Mono',monospace;color:var(--accent);opacity:0;transition:all .2s;pointer-events:none;z-index:999;box-shadow:0 0 20px var(--glow);letter-spacing:.05em}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.loading-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:1.5rem}
+.spin{width:48px;height:48px;border-radius:50%;border:2px solid transparent;border-top-color:var(--accent);border-right-color:var(--accent2);animation:spinning 1s linear infinite;box-shadow:0 0 20px var(--glow)}
+@keyframes spinning{to{transform:rotate(360deg)}}
+.load-txt{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:.2em;animation:blink 1.5s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="neb"></div>
+<div class="app" id="app"></div>
+<div id="toast"></div>
+
+<!-- Edit room modal -->
+<div class="modal-overlay" id="edit-modal" style="display:none" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">Edit room</div>
+    <div class="modal-label">Room name</div>
+    <input class="modal-input" id="modal-name" placeholder="e.g. Home, Work…" maxlength="24"/>
+    <div class="modal-label">Room colour</div>
+    <div class="color-row" id="modal-colors"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeEditModal()">Cancel</button>
+      <button class="modal-save" onclick="saveRoomEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Starfield ─────────────────────────────────────────────────────────
+(function(){
+  const cv=document.getElementById('c'),cx=cv.getContext('2d');
+  let stars=[],shots=[],frame=0;
+  function resize(){cv.width=innerWidth;cv.height=innerHeight;stars=Array.from({length:220},()=>({x:Math.random()*cv.width,y:Math.random()*cv.height,r:Math.random()*1.4+.2,phase:Math.random()*Math.PI*2,spd:Math.random()*.003+.001}));}
+  function shoot(){shots.push({x:Math.random()*cv.width*.65,y:Math.random()*cv.height*.35,len:Math.random()*130+60,spd:Math.random()*9+5,a:1,ang:Math.PI/5+(Math.random()-.5)*.3});}
+  function draw(){
+    cx.clearRect(0,0,cv.width,cv.height);frame++;
+    if(frame%280===0)shoot();
+    stars.forEach(s=>{const a=.35+.65*Math.sin(s.phase+frame*s.spd);cx.beginPath();cx.arc(s.x,s.y,s.r,0,Math.PI*2);cx.fillStyle=`rgba(220,210,255,${a})`;cx.fill();});
+    shots=shots.filter(s=>s.a>0);
+    shots.forEach(s=>{const dx=Math.cos(s.ang)*s.len,dy=Math.sin(s.ang)*s.len;const g=cx.createLinearGradient(s.x,s.y,s.x-dx,s.y-dy);g.addColorStop(0,`rgba(181,123,255,${s.a})`);g.addColorStop(1,'transparent');cx.beginPath();cx.moveTo(s.x,s.y);cx.lineTo(s.x-dx,s.y-dy);cx.strokeStyle=g;cx.lineWidth=1.5;cx.stroke();s.x+=Math.cos(s.ang)*s.spd;s.y+=Math.sin(s.ang)*s.spd;s.a-=.016;});
+    requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize',resize);resize();draw();
+})();
+
+// ── Constants ─────────────────────────────────────────────────────────
+const FB='https://linksync-ac33d-default-rtdb.firebaseio.com';
+const LS_CODE='linksync_code';
+const LS_HISTORY='linksync_history';
+
+const ROOM_COLORS=[
+  {id:'purple', c1:'#c084fc', c2:'#4c1d95'},
+  {id:'blue',   c1:'#818cf8', c2:'#1e1b4b'},
+  {id:'pink',   c1:'#f472b6', c2:'#4a044e'},
+  {id:'teal',   c1:'#2dd4bf', c2:'#042f2e'},
+  {id:'green',  c1:'#4ade80', c2:'#052e16'},
+  {id:'orange', c1:'#fb923c', c2:'#431407'},
+  {id:'red',    c1:'#f87171', c2:'#450a0a'},
+  {id:'indigo', c1:'#a78bfa', c2:'#2e1065'},
+  {id:'cyan',   c1:'#38bdf8', c2:'#0c4a6e'},
+  {id:'yellow', c1:'#facc15', c2:'#422006'},
+  {id:'fuchsia',c1:'#e879f9', c2:'#4a044e'},
+  {id:'lime',   c1:'#a3e635', c2:'#1a2e05'},
+];
+
+function getRoomColor(colorId){
+  return ROOM_COLORS.find(c=>c.id===colorId)||ROOM_COLORS[0];
+}
+
+// ── State ─────────────────────────────────────────────────────────────
+let S={phase:'loading',code:null,links:[],connected:false,err:null,timer:null};
+let editingCode=null; // code of room being edited in modal
+
+function set(p){Object.assign(S,p);render();}
+
+// ── History ───────────────────────────────────────────────────────────
+function getHistory(){try{return JSON.parse(localStorage.getItem(LS_HISTORY)||'[]');}catch{return[];}}
+function saveHistory(h){localStorage.setItem(LS_HISTORY,JSON.stringify(h));}
+function addToHistory(code){
+  let h=getHistory().filter(r=>r.code!==code);
+  // carry over existing meta if present
+  const existing=h.find(r=>r.code===code)||{};
+  h.unshift({code,joinedAt:Date.now(),name:existing.name||'',colorId:existing.colorId||'purple'});
+  saveHistory(h.slice(0,12));
+}
+function removeFromHistory(code){saveHistory(getHistory().filter(r=>r.code!==code));}
+function updateRoomMeta(code,name,colorId){
+  const h=getHistory().map(r=>r.code===code?{...r,name,colorId}:r);
+  saveHistory(h);
+}
+function getRoomMeta(code){return getHistory().find(r=>r.code===code)||{code,name:'',colorId:'purple',joinedAt:0};}
+
+// ── Utils ─────────────────────────────────────────────────────────────
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function host(url){try{return new URL(url).hostname.replace(/^www\./,'');}catch{return url.slice(0,40);}}
+function ago(ts){const s=Math.floor((Date.now()-ts)/1000);if(s<5)return'just now';if(s<60)return s+'s ago';if(s<3600)return Math.floor(s/60)+'m ago';if(s<86400)return Math.floor(s/3600)+'h ago';return Math.floor(s/86400)+'d ago';}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
+function genCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';return Array.from({length:6},()=>c[Math.floor(Math.random()*c.length)]).join('');}
+
+// ── Firebase ──────────────────────────────────────────────────────────
+async function fbGet(p){const r=await fetch(`${FB}${p}.json`);if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}
+async function fbSet(p,d){const r=await fetch(`${FB}${p}.json`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}
+async function fbPush(p,d){const r=await fetch(`${FB}${p}.json`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}
+async function fbDel(p){await fetch(`${FB}${p}.json`,{method:'DELETE'});}
+async function fetchLinks(code){const d=await fbGet(`/rooms/${code}/links`);if(!d)return[];return Object.entries(d).map(([k,v])=>({...v,fbKey:k})).sort((a,b)=>b.ts-a.ts);}
+
+// ── Room actions ──────────────────────────────────────────────────────
+async function createRoom(){
+  const code=genCode();
+  try{
+    await fbSet(`/rooms/${code}/created`,Date.now());
+    localStorage.setItem(LS_CODE,code);
+    addToHistory(code);
+    startPoll(code);
+    set({phase:'main',code,links:[],connected:true,err:null});
+  }catch(e){set({phase:'setup',err:'Could not connect: '+e.message});}
+}
+
+async function joinRoom(inputCode){
+  const code=inputCode.trim().toUpperCase();
+  if(code.length<6){set({err:'Please enter a 6-character code.'});return;}
+  set({err:null});
+  try{
+    const exists=await fbGet(`/rooms/${code}`);
+    if(!exists)throw new Error('not found');
+    const links=await fetchLinks(code);
+    localStorage.setItem(LS_CODE,code);
+    addToHistory(code);
+    startPoll(code);
+    set({phase:'main',code,links,connected:true,err:null});
+  }catch(e){
+    set({err:e.message==='not found'?'No room with that code.':'Could not connect: '+e.message});
+  }
+}
+
+async function addLink(url){
+  let u=url.trim();if(!u)return;
+  if(!/^https?:\/\//i.test(u))u='https://'+u;
+  const item={id:uid(),url:u,domain:host(u),ts:Date.now()};
+  set({links:[item,...S.links]});
+  try{const res=await fbPush(`/rooms/${S.code}/links`,item);S.links=S.links.map(l=>l.id===item.id?{...l,fbKey:res.name}:l);toast('Link added');}
+  catch{toast('Saved locally');}
+}
+
+async function removeLink(fbKey){
+  set({links:S.links.filter(l=>l.fbKey!==fbKey)});
+  try{await fbDel(`/rooms/${S.code}/links/${fbKey}`);}catch{}
+  const el=document.querySelector(`.planet[data-key="${fbKey}"]`);
+  if(el)el.remove();
+  const tipEl=document.querySelector(`.planet-tip[data-key="${fbKey}"]`);
+  if(tipEl)tipEl.remove();
+  delete planetStates[fbKey];
+}
+
+function startPoll(code){
+  if(S.timer)clearInterval(S.timer);
+  S.timer=setInterval(async()=>{
+    try{const links=await fetchLinks(code||S.code);S.links=links;S.connected=true;syncPlanets();}
+    catch{S.connected=false;}
+  },4000);
+}
+
+function leaveRoom(){
+  if(S.timer)clearInterval(S.timer);
+  localStorage.removeItem(LS_CODE);
+  planetStates={};animRunning=false;hoveredKey=null;
+  set({phase:'setup',code:null,links:[],connected:false,err:null});
+}
+
+function copyCode(){navigator.clipboard.writeText(S.code).catch(()=>{});toast('Code copied!');}
+function copyUrl(url){navigator.clipboard.writeText(url).catch(()=>{});toast('Copied!');}
+
+// ── Code popover ──────────────────────────────────────────────────────
+let popoverOpen=false;
+function toggleCodePopover(){
+  const pop=document.getElementById('code-popover');
+  if(!pop)return;
+  popoverOpen=!popoverOpen;
+  pop.classList.toggle('open',popoverOpen);
+}
+document.addEventListener('click',e=>{
+  const btn=document.getElementById('code-icon-btn');
+  const pop=document.getElementById('code-popover');
+  if(pop&&btn&&!btn.contains(e.target)&&!pop.contains(e.target)){
+    popoverOpen=false;
+    pop.classList.remove('open');
+  }
+});
+
+// ── Room name inline edit ─────────────────────────────────────────────
+function startNameEdit(){
+  const disp=document.getElementById('room-name-disp');
+  const inp=document.getElementById('room-name-inp');
+  if(!disp||!inp)return;
+  disp.style.display='none';
+  inp.style.display='block';
+  inp.focus();inp.select();
+}
+function finishNameEdit(){
+  const disp=document.getElementById('room-name-disp');
+  const inp=document.getElementById('room-name-inp');
+  if(!disp||!inp)return;
+  const val=inp.value.trim();
+  const meta=getRoomMeta(S.code);
+  updateRoomMeta(S.code,val,meta.colorId);
+  disp.textContent=val||S.code;
+  inp.style.display='none';
+  disp.style.display='block';
+  toast('Name saved');
+}
+
+// ── Edit modal ────────────────────────────────────────────────────────
+let modalColorId='purple';
+function openEditModal(code,e){
+  e.stopPropagation();
+  editingCode=code;
+  const meta=getRoomMeta(code);
+  modalColorId=meta.colorId||'purple';
+  document.getElementById('modal-name').value=meta.name||'';
+  // Build color swatches
+  const row=document.getElementById('modal-colors');
+  row.innerHTML=ROOM_COLORS.map(c=>`
+    <div class="color-swatch${c.id===modalColorId?' selected':''}"
+      style="background:radial-gradient(circle at 35% 30%,${c.c1},${c.c2});box-shadow:0 0 8px ${c.c1}88"
+      data-cid="${c.id}" onclick="selectModalColor('${c.id}')"></div>`).join('');
+  document.getElementById('edit-modal').style.display='flex';
+}
+function selectModalColor(cid){
+  modalColorId=cid;
+  document.querySelectorAll('#modal-colors .color-swatch').forEach(s=>{
+    s.classList.toggle('selected',s.dataset.cid===cid);
+  });
+}
+function closeEditModal(){
+  document.getElementById('edit-modal').style.display='none';
+  editingCode=null;
+}
+function closeModal(e){if(e.target===document.getElementById('edit-modal'))closeEditModal();}
+function saveRoomEdit(){
+  if(!editingCode)return;
+  const name=document.getElementById('modal-name').value.trim();
+  updateRoomMeta(editingCode,name,modalColorId);
+  // if editing current room, update header
+  if(editingCode===S.code){
+    const disp=document.getElementById('room-name-disp');
+    if(disp)disp.textContent=name||S.code;
+    // update dot color via inline style on logo-orb? No, just re-render header parts
+  }
+  closeEditModal();
+  render();
+  toast('Room updated');
+}
+
+// ── Planet physics ────────────────────────────────────────────────────
+let planetStates={};
+let animRunning=false;
+let hoveredKey=null;
+
+function getField(){return document.getElementById('orbit-field');}
+function getTipLayer(){return document.getElementById('tip-layer');}
+
+function initPlanet(link){
+  const field=getField();if(!field)return;
+  const W=field.clientWidth,H=field.clientHeight;
+  const size=36+(link.domain.length%3)*10;
+  const margin=size+4;
+  planetStates[link.fbKey]={
+    x:margin+Math.random()*(W-margin*2),
+    y:margin+Math.random()*(H-margin*2),
+    vx:(Math.random()-.5)*.55,vy:(Math.random()-.5)*.55,
+    size,el:null,tipEl:null,
+  };
+}
+function syncPlanets(){
+  const field=getField();if(!field)return;
+  S.links.forEach(link=>{
+    if(!planetStates[link.fbKey])initPlanet(link);
+    if(!planetStates[link.fbKey].el)createPlanetEl(link);
+    const st=planetStates[link.fbKey];
+    if(st&&st.tipEl){const te=st.tipEl.querySelector('.tip-time');if(te)te.textContent=ago(link.ts);}
+  });
+  Object.keys(planetStates).forEach(k=>{
+    if(!S.links.find(l=>l.fbKey===k)){
+      if(planetStates[k].el)planetStates[k].el.remove();
+      if(planetStates[k].tipEl)planetStates[k].tipEl.remove();
+      delete planetStates[k];
+    }
+  });
+  if(!animRunning)startAnim();
+}
+
+const PLANET_PALETTES=[
+  ['#c084fc','#4c1d95'],['#818cf8','#1e1b4b'],['#f472b6','#4a044e'],
+  ['#34d399','#064e3b'],['#fb923c','#431407'],['#60a5fa','#1e3a8a'],
+  ['#a78bfa','#2e1065'],['#f87171','#450a0a'],['#4ade80','#052e16'],
+  ['#e879f9','#4a044e'],['#38bdf8','#0c4a6e'],['#facc15','#422006'],
+];
+function pcolor(s){let h=0;for(let c of s)h=(h*31+c.charCodeAt(0))%PLANET_PALETTES.length;return PLANET_PALETTES[h];}
+
+function createPlanetEl(link){
+  const field=getField();const tipLayer=getTipLayer();
+  if(!field||!tipLayer)return;
+  const st=planetStates[link.fbKey];if(!st)return;
+  const [c1,c2]=pcolor(link.domain);
+  const s=st.size;
+  const fsz=Math.round(s*.38);
+
+  const planet=document.createElement('div');
+  planet.className='planet';
+  planet.dataset.key=link.fbKey;
+  planet.style.cssText=`width:${s}px;height:${s}px;`;
+  planet.innerHTML=`
+    <div class="planet-inner" style="width:${s}px;height:${s}px;background:radial-gradient(circle at 32% 28%,${c1},${c2});box-shadow:0 0 ${Math.round(s*.45)}px ${c1}55,0 0 ${Math.round(s*.8)}px ${c2}33">
+      <img class="planet-favicon" src="https://www.google.com/s2/favicons?sz=32&domain=${esc(link.domain)}" style="width:${fsz}px;height:${fsz}px" onerror="this.style.display='none'"/>
+      <div class="planet-surface"></div>
+    </div>`;
+  field.appendChild(planet);
+  st.el=planet;
+  planet.style.transform=`translate(${st.x}px,${st.y}px)`;
+
+  const tip=document.createElement('div');
+  tip.className='planet-tip';
+  tip.dataset.key=link.fbKey;
+  tip.innerHTML=`
+    <div class="tip-domain">${esc(link.domain)}</div>
+    <div class="tip-url">${esc(link.url)}</div>
+    <div class="tip-time">${ago(link.ts)}</div>
+    <div class="tip-actions">
+      <button class="tip-btn copy-btn">Copy</button>
+      <a href="${esc(link.url)}" target="_blank" rel="noopener" class="tip-btn open-btn">Open</a>
+      <button class="tip-btn del del-btn">Remove</button>
+    </div>`;
+  tipLayer.appendChild(tip);
+  st.tipEl=tip;
+
+  tip.querySelector('.copy-btn').addEventListener('click',()=>copyUrl(link.url));
+  tip.querySelector('.del-btn').addEventListener('click',()=>removeLink(link.fbKey));
+
+  planet.addEventListener('mouseenter',()=>{
+    if(hoveredKey&&hoveredKey!==link.fbKey){
+      const o=planetStates[hoveredKey];
+      if(o&&o.tipEl)o.tipEl.classList.remove('visible');
+    }
+    hoveredKey=link.fbKey;
+    positionTip(st,field);
+    tip.classList.add('visible');
+  });
+  planet.addEventListener('mouseleave',e=>{
+    if(e.relatedTarget&&tip.contains(e.relatedTarget))return;
+    tip.classList.remove('visible');
+    hoveredKey=null;
+  });
+  tip.addEventListener('mouseleave',e=>{
+    if(e.relatedTarget&&planet.contains(e.relatedTarget))return;
+    tip.classList.remove('visible');
+    hoveredKey=null;
+  });
+}
+
+function positionTip(st,field){
+  const tip=st.tipEl;if(!tip)return;
+  const W=field.clientWidth,tipW=210,tipH=130;
+  let tx=st.x+st.size/2-tipW/2;
+  let ty=st.y-tipH-10;
+  tx=Math.max(4,Math.min(tx,W-tipW-4));
+  if(ty<4)ty=st.y+st.size+10;
+  tip.style.left=tx+'px';tip.style.top=ty+'px';
+}
+
+function startAnim(){
+  animRunning=true;
+  const field=getField();
+  function tick(){
+    if(!document.getElementById('orbit-field')){animRunning=false;return;}
+    const W=field.clientWidth,H=field.clientHeight;
+    Object.entries(planetStates).forEach(([key,st])=>{
+      if(!st.el||key===hoveredKey)return;
+      st.x+=st.vx;st.y+=st.vy;
+      if(st.x<0){st.x=0;st.vx=Math.abs(st.vx);}
+      else if(st.x+st.size>W){st.x=W-st.size;st.vx=-Math.abs(st.vx);}
+      if(st.y<0){st.y=0;st.vy=Math.abs(st.vy);}
+      else if(st.y+st.size>H){st.y=H-st.size;st.vy=-Math.abs(st.vy);}
+      st.el.style.transform=`translate(${st.x}px,${st.y}px)`;
+    });
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+// ── SVG icons ─────────────────────────────────────────────────────────
+const SVG={
+  out:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>`,
+  x:`<svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+  key:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3"/></svg>`,
+  pencil:`<svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
+};
+
+// ── Render ────────────────────────────────────────────────────────────
+function render(){
+  const app=document.getElementById('app');if(!app)return;
+
+  if(S.phase==='loading'){
+    app.innerHTML=`
+      <div class="hdr"><div class="logo"><div class="logo-orb"></div><div><div class="logo-name">LINKSYNC</div></div></div><div></div></div>
+      <div class="loading-screen"><div class="spin"></div><div class="load-txt">Connecting…</div></div>`;
+    return;
+  }
+
+  if(S.phase==='setup'){
+    const history=getHistory();
+    const historyHtml=history.length===0?'':`
+      <div class="recent-section" style="margin-top:2rem">
+        <div class="lbl" style="margin-bottom:.75rem">Recent rooms</div>
+        <div class="recent-grid">
+          ${history.map(r=>{
+            const meta=getRoomMeta(r.code);
+            const col=getRoomColor(meta.colorId||'purple');
+            const label=meta.name||r.code;
+            return`<div class="recent-card" onclick="joinRoom('${esc(r.code)}')">
+              <div class="recent-card-planet" style="background:radial-gradient(circle at 35% 30%,${col.c1},${col.c2});--planet-glow:${col.c1}55"></div>
+              <div class="recent-card-name">${esc(label)}</div>
+              <div class="recent-card-code">${esc(r.code)}</div>
+              <div class="recent-card-time">${ago(r.joinedAt)}</div>
+              <button class="recent-card-edit" onclick="openEditModal('${esc(r.code)}',event)" title="Edit">${SVG.pencil}</button>
+              <button class="recent-card-del" onclick="event.stopPropagation();removeFromHistory('${esc(r.code)}');render()" title="Remove">${SVG.x}</button>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+
+    app.innerHTML=`
+      <div class="hdr">
+        <div class="logo"><div class="logo-orb"></div><div><div class="logo-name">LINKSYNC</div></div></div>
+        <div></div>
+      </div>
+      ${S.err?`<div class="err">${esc(S.err)}</div>`:''}
+      <div style="width:100%;max-width:440px">
+        <div class="panel">
+          <div class="lbl">Create a new room</div>
+          <p style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:1.1rem">Start a private room and get a 6-character code to share.</p>
+          <button class="btn btn-full" onclick="createRoom()">Create room</button>
+        </div>
+        <div class="or-row"><div class="or-line"></div><div class="or-txt">OR</div><div class="or-line"></div></div>
+        <div class="panel">
+          <div class="lbl">Join a room</div>
+          <p style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:1.1rem">Enter the 6-character code from another device.</p>
+          <div class="add-row">
+            <input class="inp inp-code" id="join-inp" maxlength="6" placeholder="······" autocomplete="off" spellcheck="false"/>
+            <button class="btn" onclick="doJoin()">Join</button>
+          </div>
+        </div>
+        <div class="ft" style="margin-top:.5rem">Only people with your code can access your room</div>
+      </div>
+      ${historyHtml}`;
+
+    const ji=document.getElementById('join-inp');
+    if(ji){
+      ji.addEventListener('input',e=>{e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'');});
+      ji.addEventListener('keydown',e=>{if(e.key==='Enter')doJoin();});
+    }
+    return;
+  }
+
+  // ── Main ──
+  const meta=getRoomMeta(S.code);
+  const col=getRoomColor(meta.colorId||'purple');
+  const roomLabel=meta.name||S.code;
+
+  if(!document.getElementById('orbit-field')){
+    planetStates={};animRunning=false;hoveredKey=null;
+    app.innerHTML=`
+      <div class="hdr">
+        <div class="logo">
+          <div class="logo-orb" style="background:radial-gradient(circle at 35% 30%,${col.c1},${col.c2});box-shadow:0 0 25px ${col.c1}88,0 0 50px ${col.c2}55"></div>
+          <div>
+            <div class="logo-name">LINKSYNC</div>
+          </div>
+        </div>
+        <div class="room-bar">
+          <div class="dot${S.connected?'':' off'}"></div>
+          <span id="room-name-disp" class="room-name-display" onclick="startNameEdit()" title="Click to rename">${esc(roomLabel)}</span>
+          <input id="room-name-inp" class="room-name-input" value="${esc(meta.name||'')}" placeholder="${esc(S.code)}" style="display:none"
+            onblur="finishNameEdit()" onkeydown="if(event.key==='Enter')finishNameEdit();if(event.key==='Escape'){this.style.display='none';document.getElementById('room-name-disp').style.display='block';}"/>
+          <button class="btn-icon" onclick="openEditModal('${esc(S.code)}',event)" title="Edit room">${SVG.pencil}</button>
+          <div style="position:relative">
+            <button class="code-icon-btn" id="code-icon-btn" onclick="toggleCodePopover()" title="Show room code">${SVG.key}</button>
+            <div class="code-popover" id="code-popover">
+              <div class="code-popover-label">Room code</div>
+              <div class="code-popover-val" onclick="copyCode()">${esc(S.code)}</div>
+              <div class="code-popover-hint">Share this to invite others &nbsp;·&nbsp; <span onclick="copyCode()">copy</span></div>
+            </div>
+          </div>
+          <button class="btn-icon" onclick="leaveRoom()" title="Leave room">${SVG.out}</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="lbl">Add a link</div>
+        <div class="add-row">
+          <input class="inp" type="text" id="uin" placeholder="https://example.com — paste any URL"/>
+          <button class="btn" onclick="da()">Add</button>
+        </div>
+      </div>
+      <div id="orbit-field" style="position:relative">
+        <div id="tip-layer"></div>
+      </div>
+      <div class="ft" id="ft">Syncing every 4s · ${S.connected?'connected':'reconnecting…'}</div>`;
+    document.getElementById('uin')?.addEventListener('keydown',e=>{if(e.key==='Enter')da();});
+  } else {
+    // update status + orb color
+    const ft=document.getElementById('ft');
+    if(ft)ft.textContent=`Syncing every 4s · ${S.connected?'connected':'reconnecting…'}`;
+    const orb=document.querySelector('.logo-orb');
+    if(orb)orb.style.cssText+=`;background:radial-gradient(circle at 35% 30%,${col.c1},${col.c2})`;
+    const disp=document.getElementById('room-name-disp');
+    if(disp)disp.textContent=meta.name||S.code;
+  }
+
+  const field=getField();
+  if(field){
+    if(S.links.length===0){
+      field.querySelectorAll('.planet').forEach(el=>el.remove());
+      getTipLayer()?.querySelectorAll('.planet-tip').forEach(el=>el.remove());
+      planetStates={};animRunning=false;
+      if(!field.querySelector('.empty-field')){
+        const emp=document.createElement('div');
+        emp.className='empty-field';
+        emp.innerHTML=`<div class="empty-orb"></div><p>No links yet</p><small>Add a link above to see it appear here</small>`;
+        field.appendChild(emp);
+      }
+    } else {
+      const emp=field.querySelector('.empty-field');if(emp)emp.remove();
+      syncPlanets();
+    }
+  }
+}
+
+function da(){const e=document.getElementById('uin');if(!e||!e.value.trim())return;const v=e.value;e.value='';addLink(v);}
+function doJoin(){const e=document.getElementById('join-inp');if(e)joinRoom(e.value);}
+
+// ── Boot ──────────────────────────────────────────────────────────────
+(async function boot(){
+  const saved=localStorage.getItem(LS_CODE);
+  if(saved){
+    try{
+      const exists=await fbGet(`/rooms/${saved}`);
+      if(!exists)throw new Error('gone');
+      const links=await fetchLinks(saved);
+      startPoll(saved);
+      set({phase:'main',code:saved,links,connected:true});
+    }catch{
+      localStorage.removeItem(LS_CODE);
+      set({phase:'setup'});
+    }
+  }else{set({phase:'setup'});}
+})();
+</script>
+</body>
+</html>
